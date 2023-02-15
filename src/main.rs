@@ -13,8 +13,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 fn main() -> Result<(), Box<dyn Error>> {
-    //let mut continue_running = Arc::new(AtomicBool::new(false));
-    let mut image = imgcodecs::imread("twily.png", IMREAD_COLOR)?;
+    let image = imgcodecs::imread("twily.png", IMREAD_COLOR)?;
 
     let mut image_uwu = image.clone();
 
@@ -32,13 +31,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     .expect("TODO: panic message");
 
     highgui::named_window("hello opencv!", 0)?;
-    let mut show_uwu = Arc::new(AtomicBool::new(false));
+
+    let show_uwu = Arc::new(AtomicBool::new(false));
     let show_uwu_ptr = show_uwu.clone();
+
     thread::spawn(move || loop {
         let v = show_uwu_ptr.load(Ordering::SeqCst);
         show_uwu_ptr.store(!v, Ordering::SeqCst);
         thread::sleep(Duration::from_secs(1));
     });
+
     'main_loop: loop {
         highgui::imshow(
             "hello opencv!",
@@ -53,5 +55,6 @@ fn main() -> Result<(), Box<dyn Error>> {
             break 'main_loop;
         }
     }
+
     Ok(())
 }
