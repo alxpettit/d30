@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 opencv = "0.77.0"
+snafu = "0.7.4"

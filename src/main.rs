@@ -1,19 +1,30 @@
-#![feature(atomic_bool_fetch_not)]
-
 use opencv::core::{Point, VecN};
+use opencv::highgui::WND_PROP_VISIBLE;
 use opencv::imgcodecs::IMREAD_COLOR;
 use opencv::imgproc::{FONT_HERSHEY_COMPLEX, FONT_HERSHEY_PLAIN, LINE_4, LINE_8};
 use opencv::prelude::*;
 use opencv::viz::Color;
 use opencv::{highgui, imgcodecs, Result};
-use std::error::Error;
+use snafu::{prelude::*, Error, Whatever};
+use std::fmt::format;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let image = imgcodecs::imread("twily.png", IMREAD_COLOR)?;
+static WINDOW_NAME: &str = "TEST";
+
+fn win_visible() -> Result<bool, Whatever> {
+    let win_visible_prop = highgui::get_window_property(WINDOW_NAME, WND_PROP_VISIBLE)
+        .with_whatever_context(|_| {
+            format!("Could not retrieve window property from OpenCV API to check visibility")
+        })?;
+    Ok(win_visible_prop != 0.)
+}
+
+fn main() -> Result<(), Whatever> {
+    let image = imgcodecs::imread("twily.png", IMREAD_COLOR)
+        .with_whatever_context(|e| format!("Could not read source image"))?;
 
     let mut image_uwu = image.clone();
 
@@ -28,9 +39,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         LINE_4,
         false,
     )
-    .expect("TODO: panic message");
+    .with_whatever_context(|_| format!("Failed to put text."))?;
 
-    highgui::named_window("hello opencv!", 0)?;
+    highgui::named_window(WINDOW_NAME, WND_PROP_VISIBLE)
+        .with_whatever_context(|_| format!("Failed to create window: {}", WINDOW_NAME))?;
 
     let show_uwu = Arc::new(AtomicBool::new(false));
     let show_uwu_ptr = show_uwu.clone();
@@ -41,9 +53,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         thread::sleep(Duration::from_secs(1));
     });
 
-    'main_loop: loop {
+    'main_loop: while win_visible()? {
         highgui::imshow(
-            "hello opencv!",
+            WINDOW_NAME,
             match show_uwu.load(Ordering::SeqCst) {
                 true => &image_uwu,
                 false => &image,
