@@ -5,7 +5,7 @@ use opencv::highgui::{QT_FONT_BOLD, WND_PROP_VISIBLE};
 use opencv::imgcodecs::IMREAD_COLOR;
 use opencv::imgproc::{FONT_HERSHEY_COMPLEX, FONT_HERSHEY_PLAIN, LINE_4, LINE_8, LINE_AA};
 use opencv::prelude::*;
-use opencv::viz::Color;
+use opencv::viz::{Color, LINE_WIDTH};
 use opencv::{highgui, imgcodecs, Result};
 use snafu::{prelude::*, Error, Whatever};
 use std::fmt::format;
@@ -69,10 +69,9 @@ fn main() -> Result<(), Whatever> {
         &mut image_uwu,
         "UwU",
         Point::new(10, 250),
-        //FONT_HERSHEY_PLAIN,
         250,
         VecN::new(200., 100., 200., 255.),
-        10,
+        -1, // negative = filled
         LINE_AA,
         false,
     )
