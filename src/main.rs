@@ -1,8 +1,9 @@
 use derive_more::Display;
 use opencv::core::{Point, VecN};
-use opencv::highgui::WND_PROP_VISIBLE;
+use opencv::freetype::prelude::*;
+use opencv::highgui::{QT_FONT_BOLD, WND_PROP_VISIBLE};
 use opencv::imgcodecs::IMREAD_COLOR;
-use opencv::imgproc::{FONT_HERSHEY_COMPLEX, FONT_HERSHEY_PLAIN, LINE_4, LINE_8};
+use opencv::imgproc::{FONT_HERSHEY_COMPLEX, FONT_HERSHEY_PLAIN, LINE_4, LINE_8, LINE_AA};
 use opencv::prelude::*;
 use opencv::viz::Color;
 use opencv::{highgui, imgcodecs, Result};
@@ -26,21 +27,29 @@ impl From<Window> for &str {
 }
 
 impl Window {
+    fn name(&self) -> &str {
+        self.name
+    }
+
     fn mkwin(&self, flags: i32) -> Result<(), Whatever> {
-        highgui::named_window(WINDOW.name, flags)
+        highgui::named_window(&self.name(), flags)
             .with_whatever_context(|_| format!("Failed to create window: {}", WINDOW.name))?;
         Ok(())
     }
+
+    fn get_win_property(&self, prop_id: i32) -> std::result::Result<f64, Whatever> {
+        highgui::get_window_property(&self.name(), prop_id).with_whatever_context(|_| {
+            format!("Could not retrieve window property from OpenCV API to check visibility")
+        })
+    }
+
     fn win_visible(&self) -> Result<bool, Whatever> {
-        let win_visible_prop = highgui::get_window_property(&self.name, WND_PROP_VISIBLE)
-            .with_whatever_context(|_| {
-                format!("Could not retrieve window property from OpenCV API to check visibility")
-            })?;
+        let win_visible_prop = self.get_win_property(WND_PROP_VISIBLE)?;
         Ok(win_visible_prop != 0.)
     }
 
     fn win_display_frame(&self, mat: &dyn opencv::core::ToInputArray) -> Result<(), Whatever> {
-        highgui::imshow(WINDOW.name, mat)
+        highgui::imshow(&self.name(), mat)
             .with_whatever_context(|_| format!("Could not render next frame"))?;
         Ok(())
     }
@@ -54,15 +63,17 @@ fn main() -> Result<(), Whatever> {
 
     let mut image_uwu = image.clone();
 
-    opencv::imgproc::put_text(
+    let mut ft2 = opencv::freetype::create_free_type2().unwrap();
+    ft2.load_font_data("RobotoMono-Medium.ttf", 0).unwrap();
+    ft2.put_text(
         &mut image_uwu,
         "UwU",
         Point::new(10, 250),
-        FONT_HERSHEY_PLAIN,
-        10.0,
+        //FONT_HERSHEY_PLAIN,
+        250,
         VecN::new(200., 100., 200., 255.),
         10,
-        LINE_4,
+        LINE_AA,
         false,
     )
     .with_whatever_context(|_| format!("Failed to put text."))?;
