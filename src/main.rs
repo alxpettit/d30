@@ -88,12 +88,16 @@ fn main() -> Result<(), Whatever> {
         thread::sleep(Duration::from_secs(1));
     });
 
+    let mut old_show_uwu: bool = true;
     'main_loop: while WINDOW.win_visible()? {
-        WINDOW.win_display_frame(match show_uwu.load(Ordering::SeqCst) {
-            true => &image_uwu,
-            false => &image,
-        })?;
-        let key = highgui::wait_key(1).expect("Oops");
+        if show_uwu.load(Ordering::SeqCst) != old_show_uwu {
+            WINDOW.win_display_frame(match show_uwu.load(Ordering::SeqCst) {
+                true => &image_uwu,
+                false => &image,
+            })?;
+            old_show_uwu = show_uwu.load(Ordering::SeqCst);
+        }
+        let key = highgui::wait_key(10).expect("Oops");
         if key == 'q' as i32 {
             break 'main_loop;
         }
