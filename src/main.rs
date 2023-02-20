@@ -75,7 +75,7 @@ fn main() -> Result<(), Whatever> {
     // negative thickness = filled
     let text_thickness = -1;
     let mut font_height = print_size.height;
-    let text_str = "UwUu";
+    let text_str = "UwUuiii";
     let mut base_line = 0;
     let mut text_size = ft2
         .get_text_size(text_str, font_height, text_thickness, &mut base_line)
@@ -92,12 +92,14 @@ fn main() -> Result<(), Whatever> {
             .expect("Failed to get text size");
         // 2;
     }
+    dbg!(&font_height);
+    dbg!(&text_size);
     //
     // for _ in 0..=word_wrap_count {
     //     let (first_half, second_half) = text_str.chars().into_iter().chunks();
 
-    let x_offset = (print_size.width - text_size.width) / 2;
-    let y_offset = -(print_size.height - text_size.height) / 2;
+    let x_offset = (text_size.width - print_size.width) / 2;
+    let y_offset = (text_size.height - print_size.height) / 2g;
     ft2.put_text(
         &mut image_uwu,
         text_str,
