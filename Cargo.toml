@@ -6,6 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+clap = "4.1.6"
 derive_more = "0.99.17"
+itertools = "0.10.5"
 opencv = "0.77.0"
 snafu = "0.7.4"
+test-log = { version = "0.2.11", default-features = false, features = ["trace"] }
+tokio = { version = "1.25.0", features = ["full"] }
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.16", default-features = false, features = ["env-filter", "fmt"] }

@@ -1,5 +1,5 @@
 use derive_more::Display;
-use opencv::core::{Point, VecN};
+use opencv::core::{Point, Scalar, Size, VecN, CV_8UC4};
 use opencv::freetype::prelude::*;
 use opencv::highgui::{QT_FONT_BOLD, WND_PROP_VISIBLE};
 use opencv::imgcodecs::IMREAD_COLOR;
@@ -14,6 +14,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
+use tracing::debug;
+use tracing_subscriber::EnvFilter;
 
 #[derive(Debug, Display)]
 struct Window {
@@ -58,24 +60,57 @@ impl Window {
 static WINDOW: Window = Window { name: "TEST" };
 
 fn main() -> Result<(), Whatever> {
-    let image = imgcodecs::imread("twily.png", IMREAD_COLOR)
-        .with_whatever_context(|e| format!("Could not read source image"))?;
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
+    debug!("Init");
+    let print_size = Size::new(320, 96);
+    let image = Mat::new_size_with_default(print_size, CV_8UC4, Scalar::all(255.0))
+        .with_whatever_context(|e| format!("Could not make Mat canvas: {}", e))?;
 
     let mut image_uwu = image.clone();
 
     let mut ft2 = opencv::freetype::create_free_type2().unwrap();
     ft2.load_font_data("RobotoMono-Medium.ttf", 0).unwrap();
+    // negative thickness = filled
+    let text_thickness = -1;
+    let mut font_height = print_size.height;
+    let text_str = "UwUu";
+    let mut base_line = 0;
+    let mut text_size = ft2
+        .get_text_size(text_str, font_height, text_thickness, &mut base_line)
+        .expect("Failed to get text size");
+    let mut word_wrap_count = 0;
+
+    // 5 is offset
+    while text_size.width > print_size.width {
+        //word_wrap_count += 1;
+        //font_height /= 2;
+        font_height -= 1;
+        text_size = ft2
+            .get_text_size(text_str, font_height, text_thickness, &mut base_line)
+            .expect("Failed to get text size");
+        // 2;
+    }
+    //
+    // for _ in 0..=word_wrap_count {
+    //     let (first_half, second_half) = text_str.chars().into_iter().chunks();
+
+    let x_offset = (print_size.width - text_size.width) / 2;
+    let y_offset = -(print_size.height - text_size.height) / 2;
     ft2.put_text(
         &mut image_uwu,
-        "UwU",
-        Point::new(10, 250),
-        250,
-        VecN::new(200., 100., 200., 255.),
-        -1, // negative = filled
+        text_str,
+        Point::new(x_offset, y_offset),
+        font_height,
+        VecN::new(200., 100., 200., 100.),
+        text_thickness,
         LINE_AA,
-        false,
+        false, // our origin is top-left
     )
     .with_whatever_context(|_| format!("Failed to put text."))?;
+    //}
+    //ft2.get_text_size();
 
     WINDOW.mkwin(WND_PROP_VISIBLE)?;
 
@@ -88,9 +123,15 @@ fn main() -> Result<(), Whatever> {
         thread::sleep(Duration::from_secs(1));
     });
 
+    let mut update_frame = false;
     let mut old_show_uwu: bool = true;
     'main_loop: while WINDOW.win_visible()? {
         if show_uwu.load(Ordering::SeqCst) != old_show_uwu {
+            update_frame = true;
+        }
+
+        if update_frame {
+            update_frame = false;
             WINDOW.win_display_frame(match show_uwu.load(Ordering::SeqCst) {
                 true => &image_uwu,
                 false => &image,
