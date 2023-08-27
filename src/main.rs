@@ -99,7 +99,7 @@ fn main() -> Result<(), Whatever> {
     //     let (first_half, second_half) = text_str.chars().into_iter().chunks();
 
     let x_offset = (text_size.width - print_size.width) / 2;
-    let y_offset = (text_size.height - print_size.height) / 2g;
+    let y_offset = (text_size.height - print_size.height) / 2;
     ft2.put_text(
         &mut image_uwu,
         text_str,
